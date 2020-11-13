@@ -9,9 +9,8 @@
 /*
 To do : 
 
-detect element types & maybe make 3D matrix to house them
-syntax
-fix detection of newlines
+checker intégrité des balises
+détection charactères spéciaux dans éléments mais pas tag "xml version"
 */
 
 int main(){
@@ -62,8 +61,6 @@ int main(){
     };
     
 
-
-
     // Counting lines and indexing
 
     int lineCount = countLines(file, fileName);
@@ -71,34 +68,38 @@ int main(){
 
     char * fileAsString = fileString(file, fileName);
 
-
-
     rewind(file);
     
-    // The !DOCTYPE element is passed as a pointer and modified by the function
-    // Same for the length
-    // Any !ELEMENT elements are put into the char** array that the function returns
-    int dtd_Length;
-    char* doctype = NULL;
-    char** elements_In_DTD = get_DTD_Elements(file, fileName, lineCount, indices, &doctype, &dtd_Length);
+    
 
-    node * head = link_Nodes(fileAsString, &dtd_Length, elements_In_DTD, indices);
-    node * sample = head;
+    // Analyze DTD
 
-    while(sample->next != NULL){
-        printf("%s\n", sample->keyword);
-        sample = sample->next;
+    elem * firstElem = get_DTD_Elements(file, fileName, lineCount, indices);
+    elem * temp = firstElem;
+
+    while(temp != NULL){
+        printf("%s %s\n", temp->role, temp->keyword);
+        temp = temp->nextElem;
     }
-        printf("%s\n", sample->keyword);
+    puts("");
 
-    printf("Doctype : %s\n", doctype);
-    for(i = 0; i < dtd_Length; i++){
-        printf("Element : %s\n", elements_In_DTD[i]);
-    };
+    ////
 
-    //freeList(head)
-    free(doctype);
-    free(elements_In_DTD);
+
+    
+    // Analyze tags
+
+    node * firstNode = link_Nodes(fileAsString, indices, firstElem);
+    node * exp = firstNode;
+
+    while(exp != NULL){
+        printf("%s\n", exp->keyword);
+        exp = exp->next;
+    }
+
+    ////
+    
+
     free(indices);
     free(fileName);
     fclose(file);

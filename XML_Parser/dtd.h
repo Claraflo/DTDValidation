@@ -2,67 +2,58 @@
 #include <stdlib.h>
 #include <string.h>
 
-char** get_DTD_Elements(FILE * file, char * path, int lineCount, int* indices, char** doctype, int* dtd_Length);
-void count_DTD_Elements(FILE * file, char * path, int lineCount, int* indices, int* count, int* longest);
+elem * get_DTD_Elements(FILE * file, char * path, int lineCount, int* indices);
 int is_Valid_Element_Name(char* word);
-node * link_Nodes(char * data, int * length, char **DTD, int * indices);
+node * link_Nodes(char * data, int * indices, elem * firstElem);
+//this is test branch
 
-
-// Can't u read dummy
 
 void errorMessage(char * msg, int line){
     printf("%s %d\n", msg, line);
     abort();
 }
 
-// Links all the nodes into a linked list in descending order and returns the head. Raises an error if element not in DTD
+// Links all the nodes into a linked list in descending order and returns the firstNode. Raises an error if element not in DTD
 
-node * link_Nodes(char * data, int * length, char **DTD, int * indices){
+node * link_Nodes(char * data, int * indices, elem * firstElem){
 
-    node * head = init_Node(NULL);
-    char * lbracketIndex = 0;
-    char * rbracketIndex = 0;
+    node * firstNode = init_Node(NULL);
     char * copy = strdup(data);
 
     int len = strlen(data);
     int nbfound = 0;
     int line = 1;
 
+    // Search each char for the start of a tag
     for(int i = 0; i < len; i++){
         line = i >= indices[line+1] ? line += 1 : line;
 
         if(data[i] == '<'){
 
-            lbracketIndex = &data[i];
-            char * word = strtok(lbracketIndex+1, ">");
+            char * word = strtok(&data[i+1], ">");
 
+            //"copy" is a copy of the file needed because strtok modifies the buffer
             if(copy[i+strlen(word)+1] != '>' || word == NULL){
                 errorMessage("Bracket error line", line);
             }
             else if(strspn(word, "ABDCEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_/") != strlen(word) && word != NULL){
+                //if contains something else than letters or _/ (Need update, abort si charactères spéciaux mais pas si balise "xml version")
                 continue;
             }
 
             int offset = word[0] == '/' ? 1 : 0;
-            int found_In_DTD = 0;
 
-            for(int j = 0; j < *length; j++){
-                if(strcmp(DTD[j], word+offset) == 0){
-                    found_In_DTD = 1;
-                    break;
-                }
-            }
-            nbfound += 1;
-
-            if(found_In_DTD == 0){
+            if(!is_Elem_In_DTD(firstElem, "Element", word+offset)){
                 errorMessage("Keyword not found in DTD line", line);
-            }
+            }            
 
+            nbfound += 1;
+            
             if(nbfound == 1){
-                head->keyword = word;
+                firstNode->keyword = word;
             }
             else{
-                add_Node(head, word);
+                add_Node(firstNode, word);
             }
 
             //printf("%s ", word);
@@ -70,57 +61,40 @@ node * link_Nodes(char * data, int * length, char **DTD, int * indices){
         }
     }
 
-    return head;
+    return firstNode;
 }
 
 
-char** get_DTD_Elements(FILE * file, char * path, int lineCount, int* indices, char** doctype, int* dtd_Length){
-    int count, longest;
-
-    count_DTD_Elements(file, path, lineCount, indices, &count, &longest);
-    *dtd_Length = count;
+elem * get_DTD_Elements(FILE * file, char * path, int lineCount, int* indices){
     
-    char ** elements_In_DTD = (char**)malloc(count * sizeof(char*));
+    elem * firstElem = init_Elem(NULL, NULL);
 
-    for(int i = 0; i < count; i++){
-        elements_In_DTD[i] = (char*)calloc(longest, sizeof(char));
-    }
-
-    //printf("%d %d\n", count, longest);
-
-    int inserted = 0;
     for(int i = 0; i < lineCount; i++){
         char * buffer = getFileLine(i, file, path, lineCount, indices);
         char * exclam = strchr(buffer, '!');
 
-        //recognize and tokenize : doctype and elements
+        ////recognize and tokenize : doctype and elements
         if(exclam != NULL){
             if(strncmp(exclam+1, "DOCTYPE",  7) == 0){
                 char* word = strtok(exclam+9, " ");
-                *doctype = realloc(*doctype, strlen(word));
-                strcpy(*doctype, word);
+                //if element contains special characters put it in list; otherwise exit
+                if(is_Valid_Element_Name(word)){
+                    firstElem->role = "Doctype";
+                    firstElem->keyword = word;
+                }
             }
             else if(strncmp(exclam+1, "ELEMENT",  7) == 0){
                 char* word = strtok(exclam+9, " ");
-
-                //if element contains special characters put it in array; otherwise exit
+                //same as above
                 if(is_Valid_Element_Name(word)){
-                    int duplicate = 0;
 
-                    //checking if element is already in the list
-                    for(int e = 0; e < inserted; e++){
-                        if(strcmp(elements_In_DTD[e], word) == 0){
-                            duplicate = 1;
-                        }
+                    //checking if element is already in the list                    
+                    if(is_Elem_In_DTD(firstElem, "element", word)){
+                        errorMessage("Duplicate element line", i+1);
                     }
-
-                    if(duplicate == 1){
-                        printf("Duplicate element found line %d\n", i);
-                        abort();
-                    }
+                    
                     else{
-                        strcpy(elements_In_DTD[inserted], word);
-                        inserted += 1;
+                        add_Elem(firstElem, "Element", word);
                     }
                 }
                 else{
@@ -130,7 +104,7 @@ char** get_DTD_Elements(FILE * file, char * path, int lineCount, int* indices, c
             }
         }
     }
-    return elements_In_DTD;
+    return firstElem;
 }
 
 
@@ -148,28 +122,4 @@ int is_Valid_Element_Name(char* word){
     }
 
     return 0;
-}
-
-
-// Counts dtd elements for array creation purposes. Is called in get_DTD_Elements
-
-void count_DTD_Elements(FILE * file, char * path, int lineCount, int* indices, int* count, int* longest){
-    int total = 0;
-    int length = 0;
-
-    for(int i = 0; i < lineCount; i++){
-
-        char * buffer = getFileLine(i, file, path, lineCount, indices);
-        char * exclam = strchr(buffer, '!');
-
-        //count the number of lines with "!"
-        if(exclam != NULL && strncmp(exclam+1, "ELEMENT",  7) == 0){
-            int wordLen = strlen(strtok(exclam+9, " "));
-            total += 1;
-            length = length < wordLen ? wordLen : length;
-        }
-    }
-
-    *count = total;
-    *longest = length;
 }
