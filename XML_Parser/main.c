@@ -10,7 +10,9 @@
 To do : 
 
 checker intégrité des balises
+charactères dans le nom du doctype. faire fonction séparée peut-être
 détection charactères spéciaux dans éléments mais pas tag "xml version"
+détection [] de la DTD
 */
 
 int main(){
@@ -99,7 +101,8 @@ int main(){
 
     ////
     
-
+    free_Elems(firstElem);
+    free_Nodes(firstNode);
     free(indices);
     free(fileName);
     fclose(file);

@@ -7,6 +7,7 @@ typedef struct elem_s elem;
 typedef struct attrib_s attrib;
 typedef struct type_s type;
 
+// Nodes are elements surrounded by < > outside the DTD
 struct node_s{
     char * keyword;
 
@@ -14,7 +15,7 @@ struct node_s{
     struct node_s *next;
 };
 
-// Role can be Doctype or Element
+// Role can be "Doctype" or "Element"
 struct elem_s{
     char * role;
     char * keyword;
@@ -53,7 +54,7 @@ void add_Node(node * original, char * data){
     new->previous = temp;
 }
 
-// Create node and init variables
+// Creates node and init variables
 
 node * init_Node(char * data){
     node * unit = malloc(sizeof(node));
@@ -65,6 +66,17 @@ node * init_Node(char * data){
     return unit;
 }
 
+// Frees entire node list
+void free_Nodes(node * original){
+    node * temp = original;
+
+    while(temp != NULL){
+        node * next = temp->next;
+        free(temp);
+        temp = next;
+    }
+}
+
 /////////////////////////////////////////////
 //ELEMS
 
@@ -72,6 +84,7 @@ node * init_Node(char * data){
 elem * init_Elem(char * rank, char * data);
 void add_Elem(elem * original, char * rank, char * data);
 int is_Elem_In_DTD(elem * original, char * rank, char * data);
+void free_Elems(elem * original);
 
 
 elem * init_Elem(char * rank, char * data){
@@ -113,4 +126,16 @@ int is_Elem_In_DTD(elem * original, char * rank, char * word){
     }
 
     return 0;
+}
+
+//frees entire element list
+//does not include attributes yet
+void free_Elems(elem * original){
+    elem * temp = original;
+
+    while(temp != NULL){
+        elem * next = temp->nextElem;
+        free(temp);
+        temp = next;
+    }
 }
