@@ -6,6 +6,7 @@
 int isXML(char* file);
 int countLines(FILE * file, char * path);
 int * indexFile(FILE * file, char * path, int length);
+int findLine(int position, int * indices, int linecount);
 char* getFileLine(int index, FILE * file, char * path, int lineCount, int* indices);
 
 
@@ -14,6 +15,8 @@ char* getFileLine(int index, FILE * file, char * path, int lineCount, int* indic
 //Should have done this before
 //If only I KNEW
 
+// Copies the file without 
+
 char* fileString(FILE * file, char* path){
     
     fseek(file, 0, SEEK_END);
@@ -21,8 +24,18 @@ char* fileString(FILE * file, char* path){
     rewind(file);
 
     char * fileString = (char *)malloc(size * sizeof(char) + 1);
+
+    for (size_t i = 0; i < size; i++)
+    {
+        fileString[i] = fgetc(file);
+
+        if((fileString[i - 1] == '\n' || fileString[i - 1] == ' ') 
+        && (fileString[i] == '\n' || fileString[i] == ' ')){
+            --i, --size;
+            continue;
+        }
+    }
     
-    fread(fileString, 1, size, file);
     fileString[size] = '\0';
     return fileString;
 }
@@ -97,4 +110,14 @@ char* getFileLine(int index, FILE * file, char * path, int lineCount, int* indic
     strcpy(ligne, buffer);
 
     return ligne;
+}
+
+int findLine(int position, int * indices, int linecount){
+    int result = 0;
+    for(int i = 1; i <= linecount; i++){
+        if(position >= indices[i]){
+            result = i;
+        }
+    }
+    return result+1;
 }

@@ -10,6 +10,7 @@ typedef struct type_s type;
 // Nodes are elements surrounded by < > outside the DTD
 struct node_s{
     char * keyword;
+    char * text;
 
     struct node_s *previous;
     struct node_s *next;
@@ -64,6 +65,20 @@ node * init_Node(char * data){
     unit->previous = NULL;
 
     return unit;
+}
+
+void write_Node(node * original, int index, char * data){
+
+    node * temp = original;
+
+    while(temp->next != NULL){
+        temp = temp->next;
+    }
+
+    node * new = init_Node(data);
+
+    temp->next = new;
+    new->previous = temp;
 }
 
 // Frees entire node list

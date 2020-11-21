@@ -5,14 +5,14 @@
 #include "file.h"
 #include "structs.h"
 #include "dtd.h"
+#include "dtd.c"
 
 /*
 To do : 
 
-checker intégrité des balises
-charactères dans le nom du doctype. faire fonction séparée peut-être
+vérifier validité nom éléments et charactères
 détection charactères spéciaux dans éléments mais pas tag "xml version"
-détection [] de la DTD
+1ESG = segfault
 */
 
 int main(){
@@ -61,7 +61,6 @@ int main(){
             memset(fileName+4,0,strlen(fileName)-4);
         }
     };
-    
 
     // Counting lines and indexing
 
@@ -71,36 +70,34 @@ int main(){
     char * fileAsString = fileString(file, fileName);
 
     rewind(file);
+
+
+    // // Analyze tags
+
+    elem * firstElem = init_Elem(NULL, NULL);
+    node * firstNode = init_Node(NULL);
+
+    link_Nodes(fileAsString, indices, firstNode, firstElem, lineCount);
     
     
-
-    // Analyze DTD
-
-    elem * firstElem = get_DTD_Elements(file, fileName, lineCount, indices);
-    elem * temp = firstElem;
-
-    while(temp != NULL){
-        printf("%s %s\n", temp->role, temp->keyword);
-        temp = temp->nextElem;
-    }
-    puts("");
-
-    ////
-
-
-    
-    // Analyze tags
-
-    node * firstNode = link_Nodes(fileAsString, indices, firstElem);
     node * exp = firstNode;
 
+    puts("");
     while(exp != NULL){
         printf("%s\n", exp->keyword);
         exp = exp->next;
     }
 
-    ////
-    
+    puts("");
+
+    elem * temp = firstElem;
+    while(temp != NULL){
+        printf("%s %s\n", temp->role, temp->keyword);
+        temp = temp->nextElem;
+    }
+
+
+    puts("");
     free_Elems(firstElem);
     free_Nodes(firstNode);
     free(indices);
