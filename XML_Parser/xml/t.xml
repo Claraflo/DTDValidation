@@ -1,11 +1,14 @@
 <?xml version="1.0"?>
-<!DOCTYPE ESGI [
+<!DOCTYPE ESGI [     
 <!ELEMENT classrooms (classroom+)>
-<!ELEMENT classroom (#PCDATA)>
+<!ELEMENT classroom (#PCDATA) >
+<!ELEMENT proutroom (prout)>
 ]>
+
+
 <classrooms>
-<classroom>AL</classroom>
+<classroom>ABC</classroom>
 <classroom>IABD</classroom>
 <classroom>MOC</classroom>
-<classroom>IBC</classroom>
+<classroom>BRO</classroom>
 </classrooms>
