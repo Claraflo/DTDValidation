@@ -1,0 +1,15 @@
+<?xml version="1.0" >
+<!DOCTYPE esgi [
+<!ELEMENT classrooms (classroom+,thevert?)>
+<!ELEMENT classroom (#PCDATA) >
+<!ELEMENT thevert (#PCDATA)>
+]>
+
+<esgi>
+<classrooms>
+<classroom>ABCqsdqs</classroom>
+<classroom>IABD</classroom>
+<classroom>MOC</classroom>
+<classroom>BRO</classroom>
+</classrooms>
+</esgi>
