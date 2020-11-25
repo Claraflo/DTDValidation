@@ -65,6 +65,10 @@ node * link_Nodes(char * data, int * indices, node * firstNode, elem * firstElem
             int j = i;
             i += strlen(word)+1;
 
+            if(findLine(i, indices, lineCount) == 1 && strncmp(word, "?xml", 4) != 0){
+                errorMessage("File must start with xml version declaration line", findLine(i, indices, lineCount));
+            }
+
             if(word[1] == ' ' || (word[1] == '!' && isDTDfound == 1)){
                 //printf("^%c^\n", copy[i]);
                 errorMessage("Invalid element name line", findLine(i, indices, lineCount));
